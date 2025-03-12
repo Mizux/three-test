@@ -2,7 +2,7 @@
 
 Three.js + Vite + TypeScript starter
 
-- [Demo](https://vite-threejs-ts-template.vercel.app/)
+- [Demo](../../deployments/github-pages)
 - [Jump to CLI commands](#cli-commands)
 
 ## Copy (clone without git history)
