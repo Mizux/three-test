@@ -1,4 +1,3 @@
-import GUI from 'lil-gui'
 import {
   AmbientLight,
   AxesHelper,
@@ -17,80 +16,85 @@ import {
   Scene,
   WebGLRenderer,
 } from 'three'
-import { DragControls } from 'three/examples/jsm/controls/DragControls'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import Stats from 'three/examples/jsm/libs/stats.module'
+import { DragControls } from 'three/addons/controls/DragControls.js'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import * as animations from './helpers/animations'
 import { toggleFullScreen } from './helpers/fullscreen'
 import { resizeRendererToDisplaySize } from './helpers/responsiveness'
-import './style.css'
 
-const CANVAS_ID = 'scene'
+export default class SceneApp {
+canvas: HTMLElement;
+clock: Clock;
+renderer: WebGLRenderer;
+sceneApp: Scene;
 
-let canvas: HTMLElement
-let renderer: WebGLRenderer
-let scene: Scene
-let loadingManager: LoadingManager
-let ambientLight: AmbientLight
-let pointLight: PointLight
-let cube: Mesh
-let camera: PerspectiveCamera
-let cameraControls: OrbitControls
-let dragControls: DragControls
-let axesHelper: AxesHelper
-let pointLightHelper: PointLightHelper
-let clock: Clock
-let stats: Stats
-let gui: GUI
+loadingManager: LoadingManager;
 
-const animation = { enabled: true, play: true }
+ambientLight: AmbientLight;
+pointLight: PointLight;
 
-init()
-animate()
+camera: PerspectiveCamera;
+cameraControls: OrbitControls;
+dragControls: DragControls;
 
-function init() {
-  // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
+cube: Mesh;
+plane: Mesh;
+axesHelper: AxesHelper;
+pointLightHelper: PointLightHelper;
+
+animation = { enabled: true, play: true }
+
+constructor(node: HTMLElement | null = null, clock: Clock) {
+  // ===== RENDERER, 🖼 CANVAS & 🎬 SCENE =====
   {
-    canvas = document.querySelector(`canvas#${CANVAS_ID}`)!
-    renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true })
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    renderer.shadowMap.enabled = true
-    renderer.shadowMap.type = PCFSoftShadowMap
-    scene = new Scene()
+    this.renderer = new WebGLRenderer({
+       /*canvas,*/
+       antialias: true,
+       alpha: true })
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = PCFSoftShadowMap;
+    if (node === null)
+      document.body.appendChild(this.renderer.domElement);
+    else
+      node.appendChild(this.renderer.domElement);
+    this.canvas = this.renderer.domElement;
+    //this.canvas = document.querySelector(`canvas#${CANVAS_ID}`)!;
+    this.sceneApp = new Scene();
   }
 
   // ===== 👨🏻‍💼 LOADING MANAGER =====
   {
-    loadingManager = new LoadingManager()
+    this.loadingManager = new LoadingManager();
 
-    loadingManager.onStart = () => {
-      console.log('loading started')
+    this.loadingManager.onStart = () => {
+      console.log('loading started');
     }
-    loadingManager.onProgress = (url, loaded, total) => {
-      console.log('loading in progress:')
-      console.log(`${url} -> ${loaded} / ${total}`)
+    this.loadingManager.onProgress = (url, loaded, total) => {
+      console.log('loading in progress:');
+      console.log(`${url} -> ${loaded} / ${total}`);
     }
-    loadingManager.onLoad = () => {
-      console.log('loaded!')
+    this.loadingManager.onLoad = () => {
+      console.log('loaded!');
     }
-    loadingManager.onError = () => {
-      console.log('❌ error while loading')
+    this.loadingManager.onError = () => {
+      console.log('❌ error while loading');
     }
   }
 
   // ===== 💡 LIGHTS =====
   {
-    ambientLight = new AmbientLight('white', 0.4)
-    pointLight = new PointLight('white', 20, 100)
-    pointLight.position.set(-2, 2, 2)
-    pointLight.castShadow = true
-    pointLight.shadow.radius = 4
-    pointLight.shadow.camera.near = 0.5
-    pointLight.shadow.camera.far = 4000
-    pointLight.shadow.mapSize.width = 2048
-    pointLight.shadow.mapSize.height = 2048
-    scene.add(ambientLight)
-    scene.add(pointLight)
+    this.ambientLight = new AmbientLight('white', 0.4);
+    this.pointLight = new PointLight('white', 20, 100);
+    this.pointLight.position.set(-2, 2, 2);
+    this.pointLight.castShadow = true;
+    this.pointLight.shadow.radius = 4;
+    this.pointLight.shadow.camera.near = 0.5;
+    this.pointLight.shadow.camera.far = 4000;
+    this.pointLight.shadow.mapSize.width = 2048;
+    this.pointLight.shadow.mapSize.height = 2048;
+    this.sceneApp.add(this.ambientLight);
+    this.sceneApp.add(this.pointLight);
   }
 
   // ===== 📦 OBJECTS =====
@@ -102,10 +106,11 @@ function init() {
       metalness: 0.5,
       roughness: 0.7,
     })
-    cube = new Mesh(cubeGeometry, cubeMaterial)
-    cube.castShadow = true
-    cube.position.y = 0.5
+    this.cube = new Mesh(cubeGeometry, cubeMaterial)
+    this.cube.castShadow = true
+    this.cube.position.y = 0.5
 
+    // ==== 🗺️ WORLD ====
     const planeGeometry = new PlaneGeometry(3, 3)
     const planeMaterial = new MeshLambertMaterial({
       color: 'gray',
@@ -115,177 +120,102 @@ function init() {
       transparent: true,
       opacity: 0.4,
     })
-    const plane = new Mesh(planeGeometry, planeMaterial)
-    plane.rotateX(Math.PI / 2)
-    plane.receiveShadow = true
+    this.plane = new Mesh(planeGeometry, planeMaterial)
+    this.plane.rotateX(Math.PI / 2)
+    this.plane.receiveShadow = true
 
-    scene.add(cube)
-    scene.add(plane)
+    this.sceneApp.add(this.cube)
+    this.sceneApp.add(this.plane)
   }
 
   // ===== 🎥 CAMERA =====
   {
-    camera = new PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 100)
-    camera.position.set(2, 2, 5)
+    this.camera = new PerspectiveCamera(50, this.canvas.clientWidth / this.canvas.clientHeight, 0.1, 100)
+    this.camera.position.set(2, 2, 5)
   }
 
   // ===== 🕹️ CONTROLS =====
   {
-    cameraControls = new OrbitControls(camera, canvas)
-    cameraControls.target = cube.position.clone()
-    cameraControls.enableDamping = true
-    cameraControls.autoRotate = false
-    cameraControls.update()
+    this.cameraControls = new OrbitControls(this.camera, this.canvas)
+    this.cameraControls.target = this.cube.position.clone()
+    this.cameraControls.enableDamping = true
+    this.cameraControls.autoRotate = false
+    this.cameraControls.update()
 
-    dragControls = new DragControls([cube], camera, renderer.domElement)
-    dragControls.addEventListener('hoveron', (event) => {
+    this.dragControls = new DragControls([this.cube], this.camera, this.renderer.domElement)
+    this.dragControls.addEventListener('hoveron', (event) => {
       const mesh = event.object as Mesh
       const material = mesh.material as MeshStandardMaterial
       material.emissive.set('orange')
     })
-    dragControls.addEventListener('hoveroff', (event) => {
+    this.dragControls.addEventListener('hoveroff', (event) => {
       const mesh = event.object as Mesh
       const material = mesh.material as MeshStandardMaterial
       material.emissive.set('black')
     })
-    dragControls.addEventListener('dragstart', (event) => {
+    this.dragControls.addEventListener('dragstart', (event) => {
       const mesh = event.object as Mesh
       const material = mesh.material as MeshStandardMaterial
-      cameraControls.enabled = false
-      animation.play = false
+      this.cameraControls.enabled = false
+      this.animation.play = false
       material.emissive.set('black')
       material.opacity = 0.7
       material.needsUpdate = true
     })
-    dragControls.addEventListener('dragend', (event) => {
-      cameraControls.enabled = true
-      animation.play = true
+    this.dragControls.addEventListener('dragend', (event) => {
+      this.cameraControls.enabled = true
+      this.animation.play = true
       const mesh = event.object as Mesh
       const material = mesh.material as MeshStandardMaterial
       material.emissive.set('black')
       material.opacity = 1
       material.needsUpdate = true
     })
-    dragControls.enabled = false
+    this.dragControls.enabled = false
 
     // Full screen
     window.addEventListener('dblclick', (event) => {
-      if (event.target === canvas) {
-        toggleFullScreen(canvas)
+      if (event.target === this.canvas) {
+        toggleFullScreen(this.canvas)
       }
     })
   }
 
   // ===== 🪄 HELPERS =====
   {
-    axesHelper = new AxesHelper(4)
-    axesHelper.visible = false
-    scene.add(axesHelper)
+    this.axesHelper = new AxesHelper(4)
+    this.axesHelper.visible = false
+    this.sceneApp.add(this.axesHelper)
 
-    pointLightHelper = new PointLightHelper(pointLight, undefined, 'orange')
-    pointLightHelper.visible = false
-    scene.add(pointLightHelper)
+    this.pointLightHelper = new PointLightHelper(this.pointLight, undefined, 'orange')
+    this.pointLightHelper.visible = false
+    this.sceneApp.add(this.pointLightHelper)
 
     const gridHelper = new GridHelper(20, 20, 'teal', 'darkgray')
     gridHelper.position.y = -0.01
-    scene.add(gridHelper)
+    this.sceneApp.add(gridHelper)
   }
 
-  // ===== 📈 STATS & CLOCK =====
+  // ===== ⏲️ CLOCK =====
   {
-    clock = new Clock()
-    stats = new Stats()
-    document.body.appendChild(stats.dom)
-  }
-
-  // ==== 🐞 DEBUG GUI ====
-  {
-    gui = new GUI({ title: '🐞 Debug GUI', width: 300 })
-
-    const cubeOneFolder = gui.addFolder('Cube one')
-
-    cubeOneFolder.add(cube.position, 'x').min(-5).max(5).step(0.5).name('pos x')
-    cubeOneFolder
-      .add(cube.position, 'y')
-      .min(-5)
-      .max(5)
-      .step(1)
-      .name('pos y')
-      .onChange(() => (animation.play = false))
-      .onFinishChange(() => (animation.play = true))
-    cubeOneFolder.add(cube.position, 'z').min(-5).max(5).step(0.5).name('pos z')
-
-    cubeOneFolder.add(cube.material as MeshStandardMaterial, 'wireframe')
-    cubeOneFolder.addColor(cube.material as MeshStandardMaterial, 'color')
-    cubeOneFolder.add(cube.material as MeshStandardMaterial, 'metalness', 0, 1, 0.1)
-    cubeOneFolder.add(cube.material as MeshStandardMaterial, 'roughness', 0, 1, 0.1)
-
-    cubeOneFolder
-      .add(cube.rotation, 'x', -Math.PI * 2, Math.PI * 2, Math.PI / 4)
-      .name('rotate x')
-    cubeOneFolder
-      .add(cube.rotation, 'y', -Math.PI * 2, Math.PI * 2, Math.PI / 4)
-      .name('rotate y')
-      .onChange(() => (animation.play = false))
-      .onFinishChange(() => (animation.play = true))
-    cubeOneFolder
-      .add(cube.rotation, 'z', -Math.PI * 2, Math.PI * 2, Math.PI / 4)
-      .name('rotate z')
-
-    cubeOneFolder.add(animation, 'enabled').name('animated')
-
-    const controlsFolder = gui.addFolder('Controls')
-    controlsFolder.add(dragControls, 'enabled').name('drag controls')
-
-    const lightsFolder = gui.addFolder('Lights')
-    lightsFolder.add(pointLight, 'visible').name('point light')
-    lightsFolder.add(ambientLight, 'visible').name('ambient light')
-
-    const helpersFolder = gui.addFolder('Helpers')
-    helpersFolder.add(axesHelper, 'visible').name('axes')
-    helpersFolder.add(pointLightHelper, 'visible').name('pointLight')
-
-    const cameraFolder = gui.addFolder('Camera')
-    cameraFolder.add(cameraControls, 'autoRotate')
-
-    // persist GUI state in local storage on changes
-    gui.onFinishChange(() => {
-      const guiState = gui.save()
-      localStorage.setItem('guiState', JSON.stringify(guiState))
-    })
-
-    // load GUI state if available in local storage
-    const guiState = localStorage.getItem('guiState')
-    if (guiState) gui.load(JSON.parse(guiState))
-
-    // reset GUI state button
-    const resetGui = () => {
-      localStorage.removeItem('guiState')
-      gui.reset()
-    }
-    gui.add({ resetGui }, 'resetGui').name('RESET')
-
-    gui.close()
+    this.clock = clock;
   }
 }
 
-function animate() {
-  requestAnimationFrame(animate)
-
-  stats.update()
-
-  if (animation.enabled && animation.play) {
-    animations.rotate(cube, clock, Math.PI / 3)
-    animations.bounce(cube, clock, 1, 0.5, 0.5)
+animate() {
+  //requestAnimationFrame(this.animate.bind(this))
+  if (this.animation.enabled && this.animation.play) {
+    animations.rotate(this.cube, this.clock, Math.PI / 3)
+    animations.bounce(this.cube, this.clock, 1, 0.5, 0.5)
   }
 
-  if (resizeRendererToDisplaySize(renderer)) {
-    const canvas = renderer.domElement
-    camera.aspect = canvas.clientWidth / canvas.clientHeight
-    camera.updateProjectionMatrix()
+  if (resizeRendererToDisplaySize(this.renderer)) {
+    const canvas = this.renderer.domElement
+    this.camera.aspect = canvas.clientWidth / canvas.clientHeight
+    this.camera.updateProjectionMatrix()
   }
 
-  cameraControls.update()
-
-  renderer.render(scene, camera)
+  this.cameraControls.update()
+  this.renderer.render(this.sceneApp, this.camera)
+}
 }
