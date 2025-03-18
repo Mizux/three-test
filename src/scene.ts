@@ -1,16 +1,15 @@
 import {
+  ACESFilmicToneMapping,
   AmbientLight,
   AxesHelper,
-  BoxGeometry,
   Clock,
   GridHelper,
   LoadingManager,
   Mesh,
-  MeshLambertMaterial,
   MeshStandardMaterial,
+  //NeutralToneMapping,
   PCFSoftShadowMap,
   PerspectiveCamera,
-  PlaneGeometry,
   PointLight,
   PointLightHelper,
   Scene,
@@ -18,7 +17,8 @@ import {
 } from 'three'
 import { DragControls } from 'three/addons/controls/DragControls.js'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import * as animations from './helpers/animations'
+import Cube from './cube'
+import Plane from './plane'
 import { toggleFullScreen } from './helpers/fullscreen'
 import { resizeRendererToDisplaySize } from './helpers/responsiveness'
 
@@ -37,8 +37,8 @@ camera: PerspectiveCamera;
 cameraControls: OrbitControls;
 dragControls: DragControls;
 
-cube: Mesh;
-plane: Mesh;
+cube: Cube;
+plane: Plane;
 axesHelper: AxesHelper;
 pointLightHelper: PointLightHelper;
 
@@ -63,6 +63,11 @@ constructor(node: HTMLElement | null = null, clock: Clock) {
     this.sceneApp = new Scene();
   }
 
+  // ===== ⏲️ CLOCK =====
+  {
+    this.clock = clock;
+  }
+
   // ===== 👨🏻‍💼 LOADING MANAGER =====
   {
     this.loadingManager = new LoadingManager();
@@ -82,56 +87,41 @@ constructor(node: HTMLElement | null = null, clock: Clock) {
     }
   }
 
+  // ===== 🎥 CAMERA =====
+  {
+    this.camera = new PerspectiveCamera(
+      75,
+      this.canvas.clientWidth / this.canvas.clientHeight,
+      0.1,
+      1000
+    );
+    this.camera.position.set(2, 2, 5)
+  }
+
   // ===== 💡 LIGHTS =====
   {
     this.ambientLight = new AmbientLight('white', 0.4);
+    this.sceneApp.add(this.ambientLight);
+    
     this.pointLight = new PointLight('white', 20, 100);
     this.pointLight.position.set(-2, 2, 2);
     this.pointLight.castShadow = true;
     this.pointLight.shadow.radius = 4;
     this.pointLight.shadow.camera.near = 0.5;
-    this.pointLight.shadow.camera.far = 4000;
+    this.pointLight.shadow.camera.far = 1000;
     this.pointLight.shadow.mapSize.width = 2048;
     this.pointLight.shadow.mapSize.height = 2048;
-    this.sceneApp.add(this.ambientLight);
     this.sceneApp.add(this.pointLight);
   }
 
   // ===== 📦 OBJECTS =====
   {
-    const sideLength = 1
-    const cubeGeometry = new BoxGeometry(sideLength, sideLength, sideLength)
-    const cubeMaterial = new MeshStandardMaterial({
-      color: '#f69f1f',
-      metalness: 0.5,
-      roughness: 0.7,
-    })
-    this.cube = new Mesh(cubeGeometry, cubeMaterial)
-    this.cube.castShadow = true
-    this.cube.position.y = 0.5
+    this.cube = new Cube();
+    this.sceneApp.add(this.cube)
 
     // ==== 🗺️ WORLD ====
-    const planeGeometry = new PlaneGeometry(3, 3)
-    const planeMaterial = new MeshLambertMaterial({
-      color: 'gray',
-      emissive: 'teal',
-      emissiveIntensity: 0.2,
-      side: 2,
-      transparent: true,
-      opacity: 0.4,
-    })
-    this.plane = new Mesh(planeGeometry, planeMaterial)
-    this.plane.rotateX(Math.PI / 2)
-    this.plane.receiveShadow = true
-
-    this.sceneApp.add(this.cube)
+    this.plane = new Plane();
     this.sceneApp.add(this.plane)
-  }
-
-  // ===== 🎥 CAMERA =====
-  {
-    this.camera = new PerspectiveCamera(50, this.canvas.clientWidth / this.canvas.clientHeight, 0.1, 100)
-    this.camera.position.set(2, 2, 5)
   }
 
   // ===== 🕹️ CONTROLS =====
@@ -195,18 +185,12 @@ constructor(node: HTMLElement | null = null, clock: Clock) {
     gridHelper.position.y = -0.01
     this.sceneApp.add(gridHelper)
   }
-
-  // ===== ⏲️ CLOCK =====
-  {
-    this.clock = clock;
-  }
 }
 
 animate() {
   //requestAnimationFrame(this.animate.bind(this))
   if (this.animation.enabled && this.animation.play) {
-    animations.rotate(this.cube, this.clock, Math.PI / 3)
-    animations.bounce(this.cube, this.clock, 1, 0.5, 0.5)
+    this.cube.update(this.clock);
   }
 
   if (resizeRendererToDisplaySize(this.renderer)) {
