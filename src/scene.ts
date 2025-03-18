@@ -138,7 +138,7 @@ constructor(node: HTMLElement | null = null, clock: Clock) {
     this.dragControls.addEventListener('hoveron', (event) => {
       const mesh = event.object as Mesh
       const material = mesh.material as MeshStandardMaterial
-      material.emissive.set('orange')
+      material.emissive.set('green')
     })
     this.dragControls.addEventListener('hoveroff', (event) => {
       const mesh = event.object as Mesh
@@ -150,7 +150,7 @@ constructor(node: HTMLElement | null = null, clock: Clock) {
       const material = mesh.material as MeshStandardMaterial
       this.cameraControls.enabled = false
       this.animation.play = false
-      material.emissive.set('black')
+      material.emissive.set('orange')
       material.opacity = 0.7
       material.needsUpdate = true
     })
