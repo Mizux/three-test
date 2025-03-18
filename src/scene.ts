@@ -54,6 +54,8 @@ constructor(node: HTMLElement | null = null, clock: Clock) {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
+    //this.renderer.toneMapping = NeutralToneMapping;
+    this.renderer.toneMapping = ACESFilmicToneMapping; // NeutralToneMapping
     if (node === null)
       document.body.appendChild(this.renderer.domElement);
     else
