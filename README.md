@@ -3,9 +3,9 @@ Github-CI: [![Build Status][build_status]][build_link]
 [build_status]: ./../../actions/workflows/build.yml/badge.svg
 [build_link]: ./../../actions/workflows/build.yml
 
-# Three.js Vite Template with TypeScript
+# Vite Template with TypeScript and Three.js
 
-Three.js + Vite + TypeScript starter
+Vite + TypeScript + Three.js starter
 
 - [Demo](../../deployments/github-pages)
 - [Jump to CLI commands](#cli-commands)
@@ -18,11 +18,11 @@ Three.js + Vite + TypeScript starter
 
 ## Tech Stack
 
-- Three.js
-- TypeScript
-- Vite
+- [Three.js](https://github.com/mrdoob/three.js/) 🎨
+- Typescript 🦾
+- Powered with [Vite](https://vite.dev/) 📦
 
-## Stuff included in the `scene.ts`
+## Features
 
 - [x] Geometry
 - [x] Material
