@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@types/three": "^0.185.1",
-    "eslint": "^10.7.0",
+    "eslint": "^10.8.0",
     "prettier": "^3.9.6",
     "typescript": "^7.0.2",
     "vite": "^8.1.4"
